@@ -58,9 +58,14 @@ export function Sidebar() {
   return (
     <div className="relative w-64 h-screen bg-black text-white border-r border-zinc-800 flex flex-col">
       <div className="p-6">
-        <Link href="/dashboard" className="flex items-center space-x-2">
-          <Code2 className="h-6 w-6" />
-          <span className="text-xl font-bold">FlutterBox</span>
+        <Link href="/dashboard" className="flex flex-col items-start space-y-2">
+          <div className="flex items-center space-x-2">
+            <Code2 className="h-6 w-6" />
+            <span className="text-xl font-bold">FlutterBox</span>
+          </div>
+          <span className="text-xs font-medium px-2 py-0.5 bg-white/10 text-white/80 rounded-full border border-white/20">
+            BETA VERSION
+          </span>
         </Link>
       </div>
       
