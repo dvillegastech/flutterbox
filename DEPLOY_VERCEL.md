@@ -1,6 +1,6 @@
 # Vercel Deployment Guide
 
-This guide will help you deploy FlutterForge to Vercel.
+This guide will help you deploy FlutterBox to Vercel.
 
 ## Prerequisites
 
@@ -138,4 +138,4 @@ Every push to the `vercel` branch triggers:
 For deployment issues:
 - Vercel Documentation: https://vercel.com/docs
 - Supabase Documentation: https://supabase.com/docs
-- Project Issues: https://github.com/dvillegastech/flutterforge/issues
+- Project Issues: https://github.com/dvillegastech/flutterbox/issues

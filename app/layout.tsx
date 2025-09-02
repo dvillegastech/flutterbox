@@ -6,7 +6,7 @@ import { Toaster } from '@/components/ui/toaster'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'FlutterForge - The Open Source Flutter Widget Library',
+  title: 'FlutterBox - The Open Source Flutter Widget Library',
   description: 'Share, discover, and preview Flutter widgets in real-time. A minimalist platform for Flutter developers.',
 }
 

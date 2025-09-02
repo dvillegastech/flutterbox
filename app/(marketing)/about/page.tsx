@@ -18,7 +18,7 @@ export default function AboutPage() {
               <Code2 className="h-10 w-10" />
             </div>
             <h1 className="text-4xl sm:text-5xl font-bold text-black mb-4">
-              About FlutterForge
+              About FlutterBox
             </h1>
             <p className="text-xl text-zinc-600 max-w-2xl mx-auto">
               Building the future of Flutter development through open collaboration and shared knowledge
@@ -30,7 +30,7 @@ export default function AboutPage() {
             <CardContent className="p-8">
               <h2 className="text-2xl font-bold mb-4">Our Mission</h2>
               <p className="text-zinc-600 leading-relaxed mb-4">
-                FlutterForge was born from a simple idea: Flutter developers should have a centralized, 
+                FlutterBox was born from a simple idea: Flutter developers should have a centralized, 
                 minimalist platform to share and discover high-quality widgets. We believe in the power 
                 of open-source collaboration and the importance of making code accessible to everyone.
               </p>
@@ -140,7 +140,7 @@ export default function AboutPage() {
                 &quot;Show code, not colors&quot;
               </blockquote>
               <p className="text-zinc-600 leading-relaxed mb-4">
-                In a world of overwhelming visual complexity, we chose restraint. FlutterForge&apos;s 
+                In a world of overwhelming visual complexity, we chose restraint. FlutterBox&apos;s 
                 monochrome aesthetic isn&apos;t just a design choice—it&apos;s a statement about what matters 
                 in development: clarity, functionality, and the beauty of well-written code.
               </p>
@@ -156,7 +156,7 @@ export default function AboutPage() {
           <div className="text-center mb-12">
             <h2 className="text-2xl font-bold mb-4">Built with Love</h2>
             <p className="text-zinc-600 mb-8">
-              FlutterForge is maintained by a passionate team of Flutter enthusiasts dedicated to 
+              FlutterBox is maintained by a passionate team of Flutter enthusiasts dedicated to 
               improving the developer experience for everyone.
             </p>
             <div className="flex justify-center space-x-4">
@@ -174,7 +174,7 @@ export default function AboutPage() {
 
           {/* CTA Section */}
           <div className="bg-black text-white rounded-2xl p-8 text-center">
-            <h2 className="text-2xl font-bold mb-4">Join the FlutterForge Community</h2>
+            <h2 className="text-2xl font-bold mb-4">Join the FlutterBox Community</h2>
             <p className="text-zinc-300 mb-6">
               Start sharing your Flutter widgets and discover amazing components from developers worldwide
             </p>

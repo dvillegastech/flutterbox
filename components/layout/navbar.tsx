@@ -38,7 +38,7 @@ export function Navbar() {
         <div className="flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center space-x-2">
             <Code2 className="h-6 w-6" />
-            <span className="text-xl font-bold">FlutterForge</span>
+            <span className="text-xl font-bold">FlutterBox</span>
           </Link>
           
           <div className="hidden md:flex items-center space-x-8">

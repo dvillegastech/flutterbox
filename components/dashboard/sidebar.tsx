@@ -60,7 +60,7 @@ export function Sidebar() {
       <div className="p-6">
         <Link href="/dashboard" className="flex items-center space-x-2">
           <Code2 className="h-6 w-6" />
-          <span className="text-xl font-bold">FlutterForge</span>
+          <span className="text-xl font-bold">FlutterBox</span>
         </Link>
       </div>
       

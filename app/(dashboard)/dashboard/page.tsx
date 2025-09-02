@@ -60,7 +60,7 @@ export default async function DashboardPage() {
           Welcome back{user?.user_metadata?.username ? `, ${user.user_metadata.username}` : ''}!
         </h1>
         <p className="text-zinc-600 mt-2">
-          Here&apos;s an overview of your FlutterForge activity
+          Here&apos;s an overview of your FlutterBox activity
         </p>
       </div>
 

@@ -61,7 +61,7 @@ export default function LoginPage() {
           <div className="flex items-center justify-center mb-4">
             <Link href="/" className="flex items-center space-x-2">
               <Code2 className="h-8 w-8" />
-              <span className="text-2xl font-bold">FlutterForge</span>
+              <span className="text-2xl font-bold">FlutterBox</span>
             </Link>
           </div>
           <CardTitle className="text-2xl text-center">Welcome back</CardTitle>

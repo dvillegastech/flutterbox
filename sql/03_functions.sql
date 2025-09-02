@@ -1,4 +1,4 @@
--- FlutterForge Database Functions
+-- FlutterBox Database Functions
 -- Version: 1.0.0
 -- Description: Utility functions and stored procedures
 

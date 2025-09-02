@@ -16,7 +16,7 @@ export default function DocumentationPage() {
               Documentation
             </h1>
             <p className="text-xl text-zinc-600">
-              Everything you need to know about using FlutterForge
+              Everything you need to know about using FlutterBox
             </p>
           </div>
 
@@ -39,7 +39,7 @@ export default function DocumentationPage() {
                 <CardContent className="prose prose-zinc max-w-none">
                   <h3 className="text-lg font-semibold mb-3">1. Create an Account</h3>
                   <p className="text-zinc-600 mb-4">
-                    Sign up for a free FlutterForge account to start sharing and discovering Flutter widgets.
+                    Sign up for a free FlutterBox account to start sharing and discovering Flutter widgets.
                   </p>
                   
                   <h3 className="text-lg font-semibold mb-3">2. Browse Widgets</h3>
@@ -134,7 +134,7 @@ export default function DocumentationPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-zinc-600 mb-4">
-                    FlutterForge is built on principles of open collaboration and respect. When publishing widgets:
+                    FlutterBox is built on principles of open collaboration and respect. When publishing widgets:
                   </p>
                   <ul className="list-disc list-inside text-zinc-600 space-y-2">
                     <li>Respect intellectual property rights</li>
@@ -155,7 +155,7 @@ export default function DocumentationPage() {
                     <span>API Access</span>
                   </CardTitle>
                   <CardDescription>
-                    Programmatic access to FlutterForge (Coming Soon)
+                    Programmatic access to FlutterBox (Coming Soon)
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -165,7 +165,7 @@ export default function DocumentationPage() {
                       REST API access is currently in development
                     </p>
                     <p className="text-sm text-zinc-500">
-                      Soon you&apos;ll be able to integrate FlutterForge widgets directly into your development workflow
+                      Soon you&apos;ll be able to integrate FlutterBox widgets directly into your development workflow
                     </p>
                   </div>
                 </CardContent>
@@ -179,16 +179,16 @@ export default function DocumentationPage() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div>
-                    <h3 className="font-semibold mb-2">Is FlutterForge free to use?</h3>
+                    <h3 className="font-semibold mb-2">Is FlutterBox free to use?</h3>
                     <p className="text-zinc-600">
-                      Yes! FlutterForge is completely free for browsing, downloading, and publishing widgets. We believe in open-source collaboration.
+                      Yes! FlutterBox is completely free for browsing, downloading, and publishing widgets. We believe in open-source collaboration.
                     </p>
                   </div>
                   
                   <div>
                     <h3 className="font-semibold mb-2">Can I use widgets in commercial projects?</h3>
                     <p className="text-zinc-600">
-                      All widgets on FlutterForge are open-source. Check individual widget licenses, but most allow commercial use with attribution.
+                      All widgets on FlutterBox are open-source. Check individual widget licenses, but most allow commercial use with attribution.
                     </p>
                   </div>
                   

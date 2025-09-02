@@ -1,4 +1,4 @@
--- FlutterForge Database Triggers
+-- FlutterBox Database Triggers
 -- Version: 1.0.0
 -- Description: Automated triggers for data integrity and updates
 
