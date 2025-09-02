@@ -4,6 +4,11 @@
   "devCommand": "pnpm dev",
   "installCommand": "pnpm install",
   "framework": "nextjs",
+  "git": {
+    "deploymentEnabled": {
+      "vercel": true
+    }
+  },
   "regions": ["iad1"],
   "functions": {
     "app/api/auth/callback/route.ts": {
