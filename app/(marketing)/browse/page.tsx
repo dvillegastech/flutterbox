@@ -123,7 +123,7 @@ export default function PublicBrowsePage() {
   }, [widgets, searchQuery])
 
   const handleWidgetClick = (widgetId: string) => {
-    router.push(`/signup?redirect=/dashboard/widget/${widgetId}`)
+    router.push(`/widget/${widgetId}`)
   }
 
   return (
