@@ -222,9 +222,7 @@ export default function BrowseWidgetsPage() {
           {filteredWidgets.map((widget) => (
             <WidgetCard 
               key={widget.id} 
-              widget={widget} 
-              viewMode={viewMode}
-              showAuthor={true}
+              widget={widget}
             />
           ))}
         </div>
