@@ -42,7 +42,13 @@ export default function PublicBrowsePage() {
     queryFn: async () => {
       let query = supabase
         .from('widgets')
-        .select('*')
+        .select(`
+          *,
+          profiles!widgets_user_id_fkey (
+            username,
+            avatar_url
+          )
+        `)
         .eq('is_public', true)
 
       if (selectedCategory !== 'all') {
@@ -194,10 +200,7 @@ export default function PublicBrowsePage() {
             <SelectContent>
               {categories.map((cat) => (
                 <SelectItem key={cat} value={cat}>
-                  <div className="flex items-center gap-2">
-                    {cat === 'all' && <span className="text-zinc-500">All Categories</span>}
-                    {cat !== 'all' && cat.charAt(0).toUpperCase() + cat.slice(1)}
-                  </div>
+                  {cat === 'all' ? 'All Categories' : cat.charAt(0).toUpperCase() + cat.slice(1)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -213,24 +216,9 @@ export default function PublicBrowsePage() {
               </div>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="recent">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  Most Recent
-                </div>
-              </SelectItem>
-              <SelectItem value="popular">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4" />
-                  Most Popular
-                </div>
-              </SelectItem>
-              <SelectItem value="views">
-                <div className="flex items-center gap-2">
-                  <Eye className="h-4 w-4" />
-                  Most Viewed
-                </div>
-              </SelectItem>
+              <SelectItem value="recent">Most Recent</SelectItem>
+              <SelectItem value="popular">Most Popular</SelectItem>
+              <SelectItem value="views">Most Viewed</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -301,7 +289,7 @@ export default function PublicBrowsePage() {
                             <User className="h-3 w-3 text-zinc-600" />
                           </div>
                           <span className="text-sm text-zinc-600">
-                            @developer
+                            @{widget.profiles?.username || 'anonymous'}
                           </span>
                         </div>
                       </div>
