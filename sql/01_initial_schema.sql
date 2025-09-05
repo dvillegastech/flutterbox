@@ -1,6 +1,6 @@
--- FlutterForge Database Schema
+-- FlutterBox Database Schema
 -- Version: 1.0.0
--- Description: Initial database setup for FlutterForge platform
+-- Description: Initial database setup for FlutterBox platform
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

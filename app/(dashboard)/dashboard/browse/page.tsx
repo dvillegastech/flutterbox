@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { WidgetCard } from '@/components/widgets/widget-card'
@@ -8,6 +8,7 @@ import { createSupabaseBrowser } from '@/lib/supabase/client'
 import { Search, Filter, TrendingUp, Clock, Eye, Sparkles, Grid3x3, List } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { useQuery } from '@tanstack/react-query'
 
 const categories = [
   { value: 'all', label: 'All Categories', icon: '🎯' },
@@ -27,25 +28,30 @@ const sortOptions = [
   { value: 'views', label: 'Most Viewed', icon: Eye },
 ]
 
+// Cache configuration
+const CACHE_TIME = 5 * 60 * 1000 // 5 minutes
+const STALE_TIME = 2 * 60 * 1000 // 2 minutes
+
 export default function BrowseWidgetsPage() {
-  const [widgets, setWidgets] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [sortBy, setSortBy] = useState('recent')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const supabase = createSupabaseBrowser()
 
-  useEffect(() => {
-    fetchWidgets()
-  }, [selectedCategory, sortBy])
-
-  const fetchWidgets = async () => {
-    setLoading(true)
-    try {
+  // Fetch widgets with React Query for caching
+  const { data: widgets = [], isLoading: loading } = useQuery({
+    queryKey: ['dashboard-widgets', selectedCategory, sortBy],
+    queryFn: async () => {
       let query = supabase
         .from('widgets')
-        .select('*')
+        .select(`
+          *,
+          profiles!widgets_user_id_fkey (
+            username,
+            avatar_url
+          )
+        `)
         .eq('is_public', true)
 
       if (selectedCategory !== 'all') {
@@ -63,217 +69,164 @@ export default function BrowseWidgetsPage() {
       const { data, error } = await query
 
       if (error) {
-        console.error('Error fetching widgets:', error.message)
-      } else {
-        // For now, add a default username since the join is causing issues
-        const widgetsWithProfile = (data || []).map(widget => ({
-          ...widget,
-          profiles: { username: 'Developer' }
-        }))
-        setWidgets(widgetsWithProfile)
+        console.error('Error fetching widgets:', error)
+        throw error
       }
-    } catch (error: any) {
-      console.error('Error fetching widgets:', error?.message || 'Unknown error')
-    } finally {
-      setLoading(false)
-    }
-  }
 
-  const filteredWidgets = widgets.filter(widget =>
-    widget.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    widget.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+      return data || []
+    },
+    staleTime: STALE_TIME,
+    gcTime: CACHE_TIME,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  })
+
+  // Memoized filtered widgets for better performance
+  const filteredWidgets = useMemo(() => {
+    if (!searchQuery) {
+      return widgets
+    }
+
+    const query = searchQuery.toLowerCase()
+    return widgets.filter(widget => {
+      const titleMatch = widget.title?.toLowerCase().includes(query)
+      const descMatch = widget.description?.toLowerCase().includes(query)
+      return titleMatch || descMatch
+    })
+  }, [widgets, searchQuery])
 
   const selectedCategoryData = categories.find(cat => cat.value === selectedCategory)
-  const totalResults = filteredWidgets.length
+  const selectedSortData = sortOptions.find(opt => opt.value === sortBy)
+  const SortIcon = selectedSortData?.icon || Clock
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-50 to-white">
-      {/* Header Section */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-8 py-8">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-4xl font-bold text-black flex items-center gap-3">
-                <Sparkles className="h-8 w-8" />
-                Discover Widgets
-              </h1>
-              <p className="text-zinc-600 mt-2 text-lg">
-                Explore {totalResults} amazing Flutter widgets from the community
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant={viewMode === 'grid' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('grid')}
-                className={viewMode === 'grid' ? 'bg-black text-white' : ''}
-              >
-                <Grid3x3 className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-                className={viewMode === 'list' ? 'bg-black text-white' : ''}
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
+    <div className="max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-2">
+          <Sparkles className="h-8 w-8 text-black" />
+          <h1 className="text-3xl font-bold text-black">Discover Widgets</h1>
+        </div>
+        <p className="text-zinc-600">
+          Explore amazing Flutter widgets created by the community
+        </p>
+      </div>
+
+      {/* Filters Bar */}
+      <div className="bg-white p-4 rounded-xl border border-zinc-200 mb-6">
+        <div className="flex flex-col lg:flex-row gap-4">
+          {/* Search */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-zinc-400" />
+            <Input
+              placeholder="Search widgets..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 bg-zinc-50 border-zinc-200 focus:bg-white transition-colors"
+            />
           </div>
 
-          {/* Search and Filters */}
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-zinc-400" />
-              <Input
-                placeholder="Search widgets by name, description, or tags..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-12 h-12 text-base border-2 focus:border-black transition-colors"
-              />
-            </div>
-            
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-full lg:w-[200px] h-12 border-2">
-                <div className="flex items-center gap-2">
-                  <span>{selectedCategoryData?.icon}</span>
-                  <SelectValue placeholder="Category" />
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((cat) => (
-                  <SelectItem key={cat.value} value={cat.value}>
-                    <div className="flex items-center gap-2">
-                      <span>{cat.icon}</span>
-                      <span>{cat.label}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {/* Category Filter */}
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="w-full lg:w-[200px] bg-zinc-50 border-zinc-200">
+              <div className="flex items-center gap-2">
+                <span>{selectedCategoryData?.icon}</span>
+                <SelectValue placeholder="Category" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((cat) => (
+                <SelectItem key={cat.value} value={cat.value}>
+                  <span>{cat.label}</span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full lg:w-[180px] h-12 border-2">
+          {/* Sort */}
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-full lg:w-[180px] bg-zinc-50 border-zinc-200">
+              <div className="flex items-center gap-2">
+                <SortIcon className="h-4 w-4" />
                 <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                {sortOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    <div className="flex items-center gap-2">
-                      <option.icon className="h-4 w-4" />
-                      <span>{option.label}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              {sortOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  <span>{option.label}</span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-          {/* Active Filters */}
-          {(selectedCategory !== 'all' || searchQuery) && (
-            <div className="flex items-center gap-2 mt-4">
-              <span className="text-sm text-zinc-600">Active filters:</span>
-              {selectedCategory !== 'all' && (
-                <Badge 
-                  variant="secondary" 
-                  className="bg-zinc-100 hover:bg-zinc-200 cursor-pointer"
-                  onClick={() => setSelectedCategory('all')}
-                >
-                  {selectedCategoryData?.icon} {selectedCategoryData?.label}
-                  <span className="ml-1">×</span>
-                </Badge>
-              )}
-              {searchQuery && (
-                <Badge 
-                  variant="secondary"
-                  className="bg-zinc-100 hover:bg-zinc-200 cursor-pointer"
-                  onClick={() => setSearchQuery('')}
-                >
-                  Search: "{searchQuery}"
-                  <span className="ml-1">×</span>
-                </Badge>
-              )}
-            </div>
-          )}
+          {/* View Mode */}
+          <div className="flex gap-2">
+            <Button
+              variant={viewMode === 'grid' ? 'default' : 'outline'}
+              size="icon"
+              onClick={() => setViewMode('grid')}
+              className={viewMode === 'grid' ? 'bg-black text-white' : ''}
+            >
+              <Grid3x3 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'outline'}
+              size="icon"
+              onClick={() => setViewMode('list')}
+              className={viewMode === 'list' ? 'bg-black text-white' : ''}
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Content Section */}
-      <div className="max-w-7xl mx-auto px-8 py-8">
-        {loading ? (
-          <div className={viewMode === 'grid' 
-            ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-            : "space-y-4"
-          }>
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className={viewMode === 'grid' 
-                ? "h-64 bg-gradient-to-br from-zinc-100 to-zinc-50 rounded-xl animate-pulse"
-                : "h-24 bg-gradient-to-r from-zinc-100 to-zinc-50 rounded-xl animate-pulse"
-              } />
-            ))}
-          </div>
-        ) : filteredWidgets.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-zinc-100 mb-4">
+      {/* Results Count */}
+      {!loading && (
+        <div className="flex items-center justify-between mb-6">
+          <p className="text-sm text-zinc-600">
+            Found <span className="font-semibold text-black">{filteredWidgets.length}</span> widgets
+            {selectedCategory !== 'all' && (
+              <span> in <Badge variant="secondary" className="ml-2">{selectedCategoryData?.label}</Badge></span>
+            )}
+          </p>
+        </div>
+      )}
+
+      {/* Widgets Grid/List */}
+      {loading ? (
+        <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="h-64 bg-zinc-100 rounded-xl animate-pulse" />
+          ))}
+        </div>
+      ) : filteredWidgets.length === 0 ? (
+        <div className="text-center py-16 bg-zinc-50 rounded-xl">
+          <div className="max-w-md mx-auto">
+            <div className="w-20 h-20 bg-zinc-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Search className="h-10 w-10 text-zinc-400" />
             </div>
-            <h3 className="text-xl font-semibold text-zinc-900 mb-2">No widgets found</h3>
-            <p className="text-zinc-600 max-w-md mx-auto">
-              {searchQuery 
-                ? `No widgets match "${searchQuery}". Try adjusting your search.`
-                : 'No widgets available in this category yet.'}
+            <h3 className="text-lg font-semibold mb-2">No widgets found</h3>
+            <p className="text-zinc-600">
+              {searchQuery
+                ? "Try adjusting your search terms"
+                : selectedCategory !== 'all'
+                  ? `No widgets in ${selectedCategoryData?.label} category yet`
+                  : "No public widgets available"}
             </p>
-            <Button 
-              variant="outline" 
-              className="mt-6"
-              onClick={() => {
-                setSearchQuery('')
-                setSelectedCategory('all')
-              }}
-            >
-              Clear Filters
-            </Button>
           </div>
-        ) : (
-          <>
-            {viewMode === 'grid' ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {filteredWidgets.map((widget) => (
-                  <WidgetCard key={widget.id} widget={widget} />
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {filteredWidgets.map((widget) => (
-                  <div key={widget.id} className="bg-white rounded-xl border-2 border-zinc-100 p-6 hover:border-zinc-300 transition-all hover:shadow-lg">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-black mb-2">{widget.title}</h3>
-                        <p className="text-zinc-600 mb-4">{widget.description}</p>
-                        <div className="flex items-center gap-4 text-sm text-zinc-500">
-                          <span className="flex items-center gap-1">
-                            <Eye className="h-4 w-4" />
-                            {widget.views_count} views
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <TrendingUp className="h-4 w-4" />
-                            {widget.likes_count} likes
-                          </span>
-                          <Badge variant="secondary">{widget.category}</Badge>
-                        </div>
-                      </div>
-                      <Button variant="outline" size="sm" asChild>
-                        <a href={`/dashboard/widget/${widget.id}`}>View</a>
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
+          {filteredWidgets.map((widget) => (
+            <WidgetCard 
+              key={widget.id} 
+              widget={widget}
+            />
+          ))}
+        </div>
+      )}
     </div>
   )
 }

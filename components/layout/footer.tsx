@@ -9,7 +9,7 @@ export function Footer() {
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
               <Code2 className="h-6 w-6" />
-              <span className="text-xl font-bold">FlutterForge</span>
+              <span className="text-xl font-bold">FlutterBox</span>
             </div>
             <p className="text-zinc-400 text-sm">
               The open source Flutter widget library for developers who value simplicity.
@@ -39,13 +39,13 @@ export function Footer() {
             <ul className="space-y-2 text-sm text-zinc-400">
               <li><a href="https://twitter.com" className="hover:text-white transition-colors">Twitter</a></li>
               <li><a href="https://discord.com" className="hover:text-white transition-colors">Discord</a></li>
-              <li><a href="mailto:hello@flutterforge.dev" className="hover:text-white transition-colors">Contact</a></li>
+              <li><a href="mailto:hello@flutterbox.dev" className="hover:text-white transition-colors">Contact</a></li>
             </ul>
           </div>
         </div>
         
         <div className="mt-12 pt-8 border-t border-zinc-800 text-center text-sm text-zinc-400">
-          <p>&copy; 2025 FlutterForge. All rights reserved.</p>
+          <p>&copy; 2025 FlutterBox. All rights reserved.</p>
         </div>
       </div>
     </footer>

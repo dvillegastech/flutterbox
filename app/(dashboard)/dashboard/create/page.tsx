@@ -40,7 +40,7 @@ class MyWidget extends StatelessWidget {
           Icon(Icons.flutter_dash, size: 48),
           SizedBox(height: 8),
           Text(
-            'Hello FlutterForge!',
+            'Hello FlutterBox!',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -147,7 +147,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'FlutterForge Preview',
+      title: 'FlutterBox Preview',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),

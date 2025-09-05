@@ -172,7 +172,7 @@ export default function MyWidgetsPage() {
                   >
                     {widget.is_public ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
-                  <Link href={`/dashboard/widget/${widget.id}/edit`}>
+                  <Link href={`/dashboard/widget/${widget.id}`}>
                     <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -214,7 +214,7 @@ export default function MyWidgetsPage() {
               >
                 {widget.is_public ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </Button>
-              <Link href={`/dashboard/widget/${widget.id}/edit`}>
+              <Link href={`/dashboard/widget/${widget.id}`}>
                 <Button size="sm" variant="outline">
                   <Edit className="h-4 w-4" />
                 </Button>

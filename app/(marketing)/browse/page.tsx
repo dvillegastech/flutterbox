@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Navbar } from '@/components/layout/navbar'
 import { Footer } from '@/components/layout/footer'
 import { Input } from '@/components/ui/input'
@@ -8,8 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { createSupabaseBrowser } from '@/lib/supabase/client'
-import { Search, Filter, Heart, Eye, Code2, User, ArrowRight } from 'lucide-react'
+import { Search, Filter, Heart, Eye, Code2, User, ArrowRight, Sparkles, TrendingUp, Clock, Layers } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useQuery } from '@tanstack/react-query'
 
 const categories = [
   'all',
@@ -23,26 +25,29 @@ const categories = [
   'other',
 ]
 
+// Cache time in milliseconds
+const CACHE_TIME = 5 * 60 * 1000 // 5 minutes
+const STALE_TIME = 2 * 60 * 1000 // 2 minutes
+
 export default function PublicBrowsePage() {
-  const [widgets, setWidgets] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [sortBy, setSortBy] = useState('recent')
   const supabase = createSupabaseBrowser()
+  const router = useRouter()
 
-  useEffect(() => {
-    fetchWidgets()
-  }, [selectedCategory, sortBy])
-
-  const fetchWidgets = async () => {
-    setLoading(true)
-    try {
+  // Fetch widgets with React Query for caching
+  const { data: widgets = [], isLoading, error } = useQuery({
+    queryKey: ['widgets', selectedCategory, sortBy],
+    queryFn: async () => {
       let query = supabase
         .from('widgets')
         .select(`
           *,
-          profiles (username)
+          profiles!widgets_user_id_fkey (
+            username,
+            avatar_url
+          )
         `)
         .eq('is_public', true)
 
@@ -50,6 +55,7 @@ export default function PublicBrowsePage() {
         query = query.eq('category', selectedCategory)
       }
 
+      // Apply sorting
       if (sortBy === 'recent') {
         query = query.order('created_at', { ascending: false })
       } else if (sortBy === 'popular') {
@@ -58,66 +64,156 @@ export default function PublicBrowsePage() {
         query = query.order('views_count', { ascending: false })
       }
 
-      query = query.limit(12)
-
       const { data, error } = await query
 
-      if (error) throw error
-      setWidgets(data || [])
-    } catch (error) {
-      console.error('Error fetching widgets:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+      if (error) {
+        console.error('Supabase error:', error)
+        throw error
+      }
 
-  const filteredWidgets = widgets.filter(widget =>
-    widget.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    widget.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+      return data || []
+    },
+    staleTime: STALE_TIME,
+    gcTime: CACHE_TIME,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: 1,
+  })
+
+  // Fetch stats with React Query
+  const { data: stats = { total: 0, categories: 8, developers: 0 } } = useQuery({
+    queryKey: ['widget-stats'],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from('widgets')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_public', true)
+
+      // Get unique developers count
+      const { data: devData } = await supabase
+        .from('widgets')
+        .select('user_id')
+        .eq('is_public', true)
+
+      const uniqueDevelopers = new Set(devData?.map(w => w.user_id) || []).size
+
+      return {
+        total: count || 0,
+        categories: categories.length - 1,
+        developers: uniqueDevelopers || 1
+      }
+    },
+    staleTime: STALE_TIME * 2, // Stats can be cached longer
+    gcTime: CACHE_TIME * 2,
+    refetchOnWindowFocus: false,
+  })
+
+  // Memoized filtered widgets for better performance
+  const filteredWidgets = useMemo(() => {
+    if (!searchQuery) {
+      return widgets
+    }
+
+    const query = searchQuery.toLowerCase()
+    return widgets.filter(widget => {
+      const titleMatch = widget.title?.toLowerCase().includes(query)
+      const descMatch = widget.description?.toLowerCase().includes(query)
+      return titleMatch || descMatch
+    })
+  }, [widgets, searchQuery])
+
+  const handleWidgetClick = (widgetId: string) => {
+    router.push(`/widget/${widgetId}`)
+  }
 
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
       
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Hero Section */}
         <div className="mb-12 text-center">
-          <h1 className="text-4xl sm:text-5xl font-bold text-black mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-full mb-6">
+            <Sparkles className="h-4 w-4 text-purple-600" />
+            <span className="text-sm font-medium text-purple-900">
+              Community-Powered Widget Library
+            </span>
+          </div>
+          
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-black mb-4">
             Browse Flutter Widgets
           </h1>
           <p className="text-xl text-zinc-600 max-w-2xl mx-auto">
-            Discover open-source Flutter widgets created by developers worldwide
+            Discover open-source Flutter widgets created by developers worldwide. 
+            Copy, customize, and integrate into your projects instantly.
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 mb-8">
+        {/* Stats Bar - Skeleton while loading */}
+        <div className="grid grid-cols-3 gap-4 mb-10 max-w-3xl mx-auto">
+          {isLoading ? (
+            <>
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="text-center p-4 bg-gradient-to-br from-zinc-50 to-zinc-100 rounded-xl border border-zinc-200">
+                  <div className="h-8 bg-zinc-200 rounded animate-pulse mb-2 w-16 mx-auto" />
+                  <div className="h-4 bg-zinc-200 rounded animate-pulse w-20 mx-auto" />
+                </div>
+              ))}
+            </>
+          ) : (
+            <>
+              <div className="text-center p-4 bg-gradient-to-br from-zinc-50 to-zinc-100 rounded-xl border border-zinc-200">
+                <div className="text-3xl font-bold text-black">{stats.total}</div>
+                <div className="text-sm text-zinc-600 mt-1">Total Widgets</div>
+              </div>
+              <div className="text-center p-4 bg-gradient-to-br from-zinc-50 to-zinc-100 rounded-xl border border-zinc-200">
+                <div className="text-3xl font-bold text-black">{stats.categories}</div>
+                <div className="text-sm text-zinc-600 mt-1">Categories</div>
+              </div>
+              <div className="text-center p-4 bg-gradient-to-br from-zinc-50 to-zinc-100 rounded-xl border border-zinc-200">
+                <div className="text-3xl font-bold text-black">{stats.developers}+</div>
+                <div className="text-sm text-zinc-600 mt-1">Contributors</div>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Search and Filters */}
+        <div className="flex flex-col lg:flex-row gap-4 mb-8 max-w-5xl mx-auto">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-zinc-400" />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-zinc-400" />
             <Input
-              placeholder="Search widgets..."
+              placeholder="Search widgets by name or description..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="pl-12 h-12 text-base border-zinc-200 focus:border-black transition-colors"
             />
           </div>
           
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-full sm:w-[180px]">
-              <Filter className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Category" />
+            <SelectTrigger className="w-full lg:w-[180px] h-12 border-zinc-200">
+              <div className="flex items-center gap-2">
+                <Layers className="h-4 w-4" />
+                <SelectValue placeholder="Category" />
+              </div>
             </SelectTrigger>
             <SelectContent>
               {categories.map((cat) => (
                 <SelectItem key={cat} value={cat}>
-                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                  {cat === 'all' ? 'All Categories' : cat.charAt(0).toUpperCase() + cat.slice(1)}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
 
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-full sm:w-[180px]">
-              <SelectValue placeholder="Sort by" />
+            <SelectTrigger className="w-full lg:w-[180px] h-12 border-zinc-200">
+              <div className="flex items-center gap-2">
+                {sortBy === 'recent' && <Clock className="h-4 w-4" />}
+                {sortBy === 'popular' && <TrendingUp className="h-4 w-4" />}
+                {sortBy === 'views' && <Eye className="h-4 w-4" />}
+                <SelectValue placeholder="Sort by" />
+              </div>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="recent">Most Recent</SelectItem>
@@ -127,73 +223,153 @@ export default function PublicBrowsePage() {
           </Select>
         </div>
 
-        {loading ? (
+        {/* Main Content */}
+        {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {[...Array(8)].map((_, i) => (
-              <div key={i} className="h-48 bg-zinc-100 rounded-lg animate-pulse" />
+              <div key={i} className="space-y-3">
+                <div className="h-48 bg-gradient-to-br from-zinc-100 to-zinc-50 rounded-xl animate-pulse" />
+                <div className="h-4 bg-zinc-100 rounded animate-pulse w-3/4" />
+                <div className="h-3 bg-zinc-100 rounded animate-pulse w-1/2" />
+              </div>
             ))}
           </div>
-        ) : filteredWidgets.length === 0 ? (
-          <div className="text-center py-16">
-            <Code2 className="h-16 w-16 text-zinc-300 mx-auto mb-4" />
-            <p className="text-zinc-500 text-lg">No widgets found</p>
-            <p className="text-zinc-400 mt-2">Try adjusting your search or filters</p>
+        ) : error ? (
+          <div className="text-center py-20">
+            <div className="w-24 h-24 bg-gradient-to-br from-red-100 to-red-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
+              <Code2 className="h-12 w-12 text-red-400" />
+            </div>
+            <h3 className="text-2xl font-bold text-black mb-2">Error loading widgets</h3>
+            <p className="text-zinc-500 text-lg mb-8">
+              There was a problem loading the widgets. Please try again later.
+            </p>
+            <Button 
+              onClick={() => window.location.reload()}
+              className="bg-black text-white hover:bg-zinc-900"
+            >
+              Reload Page
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredWidgets.map((widget) => (
-                <Card key={widget.id} className="group hover:border-zinc-400 transition-all hover:scale-[1.02] cursor-pointer">
-                  <Link href={`/widget/${widget.id}`}>
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-1">
-                          <h3 className="font-semibold text-lg line-clamp-1">{widget.title}</h3>
-                          <div className="flex items-center space-x-2 text-sm text-zinc-500">
-                            <User className="h-3 w-3" />
-                            <span>{widget.profiles?.username || 'Anonymous'}</span>
-                          </div>
+            {/* Show widgets if available */}
+            {filteredWidgets.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {filteredWidgets.map((widget) => (
+                  <Card 
+                    key={widget.id} 
+                    className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border-zinc-200 overflow-hidden"
+                    onClick={() => handleWidgetClick(widget.id)}
+                  >
+                    {/* Widget Preview Area */}
+                    <div className="h-32 bg-gradient-to-br from-zinc-900 to-zinc-700 relative overflow-hidden">
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Code2 className="h-16 w-16 text-white/10" />
+                      </div>
+                      <div className="absolute top-3 right-3">
+                        <span className="px-2 py-1 bg-white/20 backdrop-blur-sm text-white text-xs font-medium rounded-full">
+                          {widget.category || 'other'}
+                        </span>
+                      </div>
+                      <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/50 to-transparent">
+                        <div className="font-mono text-xs text-white/60">
+                          Widget.build()
                         </div>
-                        <div className="px-2 py-1 bg-zinc-100 rounded text-xs font-medium">
-                          {widget.category}
+                      </div>
+                    </div>
+                    
+                    <CardHeader className="pb-3">
+                      <div className="space-y-2">
+                        <h3 className="font-bold text-lg line-clamp-1 group-hover:text-black transition-colors">
+                          {widget.title || 'Untitled Widget'}
+                        </h3>
+                        <div className="flex items-center gap-2">
+                          <div className="h-6 w-6 bg-gradient-to-br from-zinc-200 to-zinc-300 rounded-full flex items-center justify-center">
+                            <User className="h-3 w-3 text-zinc-600" />
+                          </div>
+                          <span className="text-sm text-zinc-600">
+                            @{widget.profiles?.username || 'anonymous'}
+                          </span>
                         </div>
                       </div>
                     </CardHeader>
                     
-                    <CardContent className="pb-3">
+                    <CardContent className="pb-4">
                       {widget.description && (
-                        <p className="text-sm text-zinc-600 line-clamp-2">
+                        <p className="text-sm text-zinc-600 line-clamp-2 mb-4">
                           {widget.description}
                         </p>
                       )}
                       
-                      <div className="mt-4 flex items-center justify-between">
-                        <div className="flex items-center space-x-4 text-sm text-zinc-500">
-                          <div className="flex items-center space-x-1">
+                      <div className="flex items-center justify-between pt-3 border-t border-zinc-100">
+                        <div className="flex items-center gap-3 text-sm">
+                          <div className="flex items-center gap-1 text-zinc-500 hover:text-red-500 transition-colors">
                             <Heart className="h-4 w-4" />
-                            <span>{widget.likes_count}</span>
+                            <span className="font-medium">{widget.likes_count || 0}</span>
                           </div>
-                          <div className="flex items-center space-x-1">
+                          <div className="flex items-center gap-1 text-zinc-500">
                             <Eye className="h-4 w-4" />
-                            <span>{widget.views_count}</span>
+                            <span className="font-medium">{widget.views_count || 0}</span>
                           </div>
                         </div>
+                        <ArrowRight className="h-4 w-4 text-zinc-400 group-hover:text-black transition-colors" />
                       </div>
                     </CardContent>
-                  </Link>
-                </Card>
-              ))}
-            </div>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              /* Empty State */
+              <div className="text-center py-20">
+                <div className="w-24 h-24 bg-gradient-to-br from-zinc-100 to-zinc-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                  <Code2 className="h-12 w-12 text-zinc-400" />
+                </div>
+                <h3 className="text-2xl font-bold text-black mb-2">
+                  {searchQuery ? 'No widgets found' : 'No widgets available yet'}
+                </h3>
+                <p className="text-zinc-500 text-lg mb-8">
+                  {searchQuery 
+                    ? 'Try adjusting your search terms' 
+                    : selectedCategory !== 'all' 
+                      ? `No widgets in ${selectedCategory} category yet`
+                      : 'Be the first to create and share a widget!'}
+                </p>
+                <Link href="/signup">
+                  <Button className="bg-black text-white hover:bg-zinc-900">
+                    Create Your First Widget
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            )}
 
-            <div className="mt-12 text-center">
-              <p className="text-zinc-600 mb-4">Want to see more widgets and contribute?</p>
-              <Link href="/signup">
-                <Button className="bg-black text-white hover:bg-zinc-900">
-                  Sign Up to Access All Features
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
+            {/* CTA Section - Only show if widgets exist */}
+            {widgets.length > 0 && (
+              <div className="mt-16 text-center">
+                <div className="inline-flex flex-col items-center p-8 bg-gradient-to-br from-zinc-50 to-white rounded-2xl border border-zinc-200">
+                  <Sparkles className="h-8 w-8 text-zinc-400 mb-4" />
+                  <h3 className="text-xl font-bold text-black mb-2">Want to see more?</h3>
+                  <p className="text-zinc-600 mb-6 max-w-md">
+                    Sign up to access all widgets, create your own, and join our growing community of Flutter developers.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Link href="/signup">
+                      <Button className="bg-black text-white hover:bg-zinc-900 gap-2">
+                        <User className="h-4 w-4" />
+                        Create Free Account
+                      </Button>
+                    </Link>
+                    <Link href="/docs">
+                      <Button variant="outline" className="gap-2">
+                        Learn More
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>

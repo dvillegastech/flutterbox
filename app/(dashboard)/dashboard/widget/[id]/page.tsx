@@ -265,7 +265,7 @@ export default function WidgetDetailPage() {
         description: 'Widget forked successfully',
       })
       
-      router.push(`/dashboard/widget/${data.id}/edit`)
+      router.push(`/dashboard/widget/${data.id}`)
     } catch (error) {
       console.error('Fork error:', error)
       toast({
@@ -408,7 +408,7 @@ export default function WidgetDetailPage() {
                     <>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
-                        <Link href={`/dashboard/widget/${widgetId}/edit`}>
+                        <Link href={`/dashboard/widget/${widgetId}`}>
                           <Edit className="h-4 w-4 mr-2" />
                           Edit
                         </Link>

@@ -56,6 +56,17 @@ export function HeroSection() {
       
       <div className="relative container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl text-center">
+          {/* Beta Badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-50 to-orange-50 border border-orange-200 rounded-full mb-8">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
+            </span>
+            <span className="text-sm font-medium text-orange-900">
+              Beta Version - We're just getting started!
+            </span>
+          </div>
+          
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-black">
             The Open Source
             <span className="block mt-2">Flutter Widget Library</span>

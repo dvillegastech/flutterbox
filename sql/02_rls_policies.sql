@@ -1,4 +1,4 @@
--- FlutterForge Row Level Security Policies
+-- FlutterBox Row Level Security Policies
 -- Version: 1.0.0
 -- Description: RLS policies for data security and access control
 

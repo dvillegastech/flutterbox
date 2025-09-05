@@ -38,7 +38,10 @@ export function Navbar() {
         <div className="flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center space-x-2">
             <Code2 className="h-6 w-6" />
-            <span className="text-xl font-bold">FlutterForge</span>
+            <span className="text-xl font-bold">FlutterBox</span>
+            <span className="text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-zinc-700 to-black text-white rounded-full">
+              BETA
+            </span>
           </Link>
           
           <div className="hidden md:flex items-center space-x-8">

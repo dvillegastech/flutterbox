@@ -1,10 +1,10 @@
-# FlutterForge
+# FlutterBox
 
 An open-source platform for sharing and discovering Flutter widgets with real-time preview capabilities.
 
 ## Overview
 
-FlutterForge is a minimalist, monochrome platform that enables developers to share, discover, and preview Flutter widgets in real-time. Built with modern web technologies and designed for simplicity and speed, it provides a centralized hub for the Flutter community to collaborate on reusable UI components.
+FlutterBox is a minimalist, monochrome platform that enables developers to share, discover, and preview Flutter widgets in real-time. Built with modern web technologies and designed for simplicity and speed, it provides a centralized hub for the Flutter community to collaborate on reusable UI components.
 
 ## Features
 
@@ -51,7 +51,7 @@ You'll also need:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/dvillegastech/flutterforge.git
+git clone https://github.com/dvillegastech/flutterbox.git
 cd flutterforge
 ```
 
@@ -93,7 +93,7 @@ Visit `http://localhost:3000` to see the application.
 ## Project Structure
 
 ```
-flutterforge/
+flutterbox/
 ├── app/                    # Next.js App Router
 │   ├── (auth)/            # Authentication routes
 │   ├── (dashboard)/       # Protected dashboard routes
@@ -190,7 +190,7 @@ We welcome contributions from the community! Please read our contributing guidel
 
 ### Self-Hosting
 
-You can self-host FlutterForge on any platform that supports Node.js:
+You can self-host FlutterBox on any platform that supports Node.js:
 
 1. Build the application: `pnpm build`
 2. Set environment variables
@@ -200,7 +200,7 @@ You can self-host FlutterForge on any platform that supports Node.js:
 
 ### Reporting Security Issues
 
-If you discover a security vulnerability, please email security@flutterforge.dev instead of using the issue tracker. All security issues will be promptly addressed.
+If you discover a security vulnerability, please email security@flutterbox.dev instead of using the issue tracker. All security issues will be promptly addressed.
 
 ### Security Features
 
@@ -226,17 +226,17 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### Documentation
 
-Full documentation is available at [https://docs.flutterforge.dev](https://docs.flutterforge.dev)
+Full documentation is available at [https://docs.flutterbox.dev](https://docs.flutterbox.dev)
 
 ### Community
 
-- GitHub Discussions: [github.com/dvillegastech/flutterforge/discussions](https://github.com/dvillegastech/flutterforge/discussions)
-- Discord: [discord.gg/flutterforge](https://discord.gg/flutterforge)
-- Twitter: [@flutterforge](https://twitter.com/flutterforge)
+- GitHub Discussions: [github.com/dvillegastech/flutterbox/discussions](https://github.com/dvillegastech/flutterbox/discussions)
+- Discord: [discord.gg/flutterbox](https://discord.gg/flutterbox)
+- Twitter: [@flutterbox](https://twitter.com/flutterbox)
 
 ### Reporting Issues
 
-Please use the GitHub issue tracker to report bugs or request features: [github.com/dvillegastech/flutterforge/issues](https://github.com/dvillegastech/flutterforge/issues)
+Please use the GitHub issue tracker to report bugs or request features: [github.com/dvillegastech/flutterbox/issues](https://github.com/dvillegastech/flutterbox/issues)
 
 ## Roadmap
 
@@ -254,10 +254,10 @@ Please use the GitHub issue tracker to report bugs or request features: [github.
 
 ## Status
 
-![Build Status](https://img.shields.io/github/workflow/status/dvillegastech/flutterforge/CI)
-![License](https://img.shields.io/github/license/dvillegastech/flutterforge)
-![Contributors](https://img.shields.io/github/contributors/dvillegastech/flutterforge)
-![Stars](https://img.shields.io/github/stars/dvillegastech/flutterforge)
+![Build Status](https://img.shields.io/github/workflow/status/dvillegastech/flutterbox/CI)
+![License](https://img.shields.io/github/license/dvillegastech/flutterbox)
+![Contributors](https://img.shields.io/github/contributors/dvillegastech/flutterbox)
+![Stars](https://img.shields.io/github/stars/dvillegastech/flutterbox)
 
 ---
 
