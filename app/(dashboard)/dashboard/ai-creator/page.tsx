@@ -6,9 +6,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Send, Loader2, Code2, Sparkles, Copy, Check, ExternalLink, RefreshCw } from "lucide-react";
+import { Send, Loader2, Code2, Sparkles, Copy, Check, ExternalLink, RefreshCw, AlertCircle, CheckCircle, AlertTriangle, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+
+interface ValidationInfo {
+  isValid: boolean;
+  errors: Array<{ message: string; severity: string; suggestion?: string }>;
+  warnings: Array<{ message: string; severity: string; suggestion?: string }>;
+  stats: {
+    hasMain: boolean;
+    hasRunApp: boolean;
+    hasImports: boolean;
+    widgetCount: number;
+  };
+}
 
 interface Message {
   id: string;
@@ -16,6 +28,8 @@ interface Message {
   content: string;
   code?: string;
   timestamp: Date;
+  validation?: ValidationInfo;
+  originalPrompt?: string;
 }
 
 export default function AICreatorPage() {
@@ -73,19 +87,21 @@ export default function AICreatorPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, attemptFix = false, previousCode?: string, originalPrompt?: string) => {
     e.preventDefault();
-    if (!input.trim() || isLoading) return;
+    const promptToUse = attemptFix && originalPrompt ? originalPrompt : input;
+    if (!promptToUse.trim() || isLoading) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
-      content: input,
+      content: attemptFix ? `Fixing errors in the code...` : promptToUse,
       timestamp: new Date(),
+      originalPrompt: promptToUse,
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    setInput("");
+    if (!attemptFix) setInput("");
     setIsLoading(true);
 
     try {
@@ -94,7 +110,11 @@ export default function AICreatorPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ prompt: input }),
+        body: JSON.stringify({ 
+          prompt: promptToUse,
+          attemptFix,
+          previousCode 
+        }),
       });
 
       if (!response.ok) {
@@ -109,6 +129,8 @@ export default function AICreatorPage() {
         content: data.description || "Here's your Flutter widget:",
         code: data.code,
         timestamp: new Date(),
+        validation: data.validation,
+        originalPrompt: promptToUse,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
@@ -124,6 +146,17 @@ export default function AICreatorPage() {
     }
   };
 
+  const handleFixErrors = (message: Message) => {
+    if (message.code && message.originalPrompt) {
+      handleSubmit(
+        { preventDefault: () => {} } as React.FormEvent,
+        true,
+        message.code,
+        message.originalPrompt
+      );
+    }
+  };
+
   return (
     <div className="h-screen p-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
@@ -131,7 +164,7 @@ export default function AICreatorPage() {
         <Card className="flex flex-col h-full">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <div>
+              <div className="flex-1">
                 <CardTitle className="flex items-center gap-2">
                   <Sparkles className="h-5 w-5" />
                   AI Widget Creator
@@ -139,6 +172,12 @@ export default function AICreatorPage() {
                 <CardDescription>
                   Describe the Flutter widget you want to create, and I'll generate it for you
                 </CardDescription>
+                <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                  <span className="bg-muted px-2 py-1 rounded">60 req/min</span>
+                  <span className="bg-muted px-2 py-1 rounded">1K req/día</span>
+                  <span className="bg-muted px-2 py-1 rounded">10K tokens/min</span>
+                  <span className="bg-muted px-2 py-1 rounded">300K tokens/día</span>
+                </div>
               </div>
               <Button
                 variant="outline"
@@ -179,10 +218,92 @@ export default function AICreatorPage() {
                       >
                         <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                         {message.code && (
-                          <div className="mt-2">
-                            <div className="flex items-center justify-between mb-1">
+                          <div className="mt-2 space-y-2">
+                            {/* Validation Status */}
+                            {message.validation && (
+                              <div className="space-y-2">
+                                {/* Status Badge */}
+                                <div className="flex items-center gap-2">
+                                  {message.validation.isValid ? (
+                                    <div className="flex items-center gap-1 text-xs text-green-600">
+                                      <CheckCircle className="h-3 w-3" />
+                                      <span>Valid Code</span>
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center gap-1 text-xs text-destructive">
+                                      <AlertCircle className="h-3 w-3" />
+                                      <span>{message.validation.errors.length} Error{message.validation.errors.length !== 1 ? 's' : ''}</span>
+                                    </div>
+                                  )}
+                                  {message.validation.warnings.length > 0 && (
+                                    <div className="flex items-center gap-1 text-xs text-yellow-600">
+                                      <AlertTriangle className="h-3 w-3" />
+                                      <span>{message.validation.warnings.length} Warning{message.validation.warnings.length !== 1 ? 's' : ''}</span>
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                {/* Errors List */}
+                                {message.validation.errors.length > 0 && (
+                                  <div className="bg-destructive/10 border border-destructive/20 rounded p-2 space-y-1">
+                                    <div className="text-xs font-medium text-destructive">Errors:</div>
+                                    {message.validation.errors.map((error, idx) => (
+                                      <div key={idx} className="text-xs text-destructive/90">
+                                        • {error.message}
+                                        {error.suggestion && (
+                                          <div className="ml-2 text-muted-foreground">{error.suggestion}</div>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                                
+                                {/* Warnings List */}
+                                {message.validation.warnings.length > 0 && (
+                                  <div className="bg-yellow-500/10 border border-yellow-500/20 rounded p-2 space-y-1">
+                                    <div className="text-xs font-medium text-yellow-700">Warnings:</div>
+                                    {message.validation.warnings.map((warning, idx) => (
+                                      <div key={idx} className="text-xs text-yellow-700/90">
+                                        • {warning.message}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                                
+                                {/* Code Stats */}
+                                <div className="flex gap-3 text-xs text-muted-foreground">
+                                  <span className={message.validation.stats.hasMain ? "text-green-600" : "text-destructive"}>
+                                    {message.validation.stats.hasMain ? "✓" : "✗"} main()
+                                  </span>
+                                  <span className={message.validation.stats.hasRunApp ? "text-green-600" : "text-destructive"}>
+                                    {message.validation.stats.hasRunApp ? "✓" : "✗"} runApp()
+                                  </span>
+                                  <span className={message.validation.stats.hasImports ? "text-green-600" : "text-destructive"}>
+                                    {message.validation.stats.hasImports ? "✓" : "✗"} imports
+                                  </span>
+                                  <span className={message.validation.stats.widgetCount > 0 ? "text-green-600" : "text-destructive"}>
+                                    {message.validation.stats.widgetCount} widget{message.validation.stats.widgetCount !== 1 ? 's' : ''}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                            
+                            <div className="flex items-center justify-between">
                               <span className="text-xs font-mono">Flutter Code:</span>
                               <div className="flex gap-1">
+                                {message.validation && !message.validation.isValid && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleFixErrors(message)}
+                                    className="h-6 px-2 text-xs"
+                                    title="Fix errors"
+                                    disabled={isLoading}
+                                  >
+                                    <Wrench className="h-3 w-3 mr-1" />
+                                    Fix Errors
+                                  </Button>
+                                )}
                                 <Button
                                   variant="ghost"
                                   size="sm"
