@@ -10,7 +10,8 @@ import {
   Heart, 
   User, 
   LogOut,
-  Search
+  Search,
+  Sparkles
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { createSupabaseBrowser } from '@/lib/supabase/client'
@@ -31,6 +32,11 @@ const sidebarItems = [
     title: 'Create New',
     href: '/dashboard/create',
     icon: PlusCircle,
+  },
+  {
+    title: 'AI Creator',
+    href: '/dashboard/ai-creator',
+    icon: Sparkles,
   },
   {
     title: 'Liked Widgets',
