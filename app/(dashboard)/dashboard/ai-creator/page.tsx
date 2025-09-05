@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Send, Loader2, Code2, Sparkles, Copy, Check, ExternalLink } from "lucide-react";
+import { Send, Loader2, Code2, Sparkles, Copy, Check, ExternalLink, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -28,6 +28,21 @@ export default function AICreatorPage() {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const resetChat = () => {
+    setMessages([]);
+    setInput("");
+    if (iframeRef.current) {
+      // Force reload by changing src to empty first, then back to DartPad
+      iframeRef.current.src = "about:blank";
+      setTimeout(() => {
+        if (iframeRef.current) {
+          iframeRef.current.src = "https://dartpad.dev/?theme=dark&run=true&split=50";
+        }
+      }, 100);
+    }
+    toast.success("Chat cleared!");
   };
 
   useEffect(() => {
@@ -115,13 +130,26 @@ export default function AICreatorPage() {
         {/* Chat Section */}
         <Card className="flex flex-col h-full">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5" />
-              AI Widget Creator
-            </CardTitle>
-            <CardDescription>
-              Describe the Flutter widget you want to create, and I'll generate it for you
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5" />
+                  AI Widget Creator
+                </CardTitle>
+                <CardDescription>
+                  Describe the Flutter widget you want to create, and I'll generate it for you
+                </CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={resetChat}
+                title="Clear chat"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Reset
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="flex-1 flex flex-col gap-4 min-h-0">
             <ScrollArea className="flex-1 pr-4">
