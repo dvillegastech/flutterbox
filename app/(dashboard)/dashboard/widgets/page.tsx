@@ -28,8 +28,6 @@ export default function MyWidgetsPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       
-      console.log('Fetching widgets for user:', user?.id)
-      
       if (!user) {
         toast({
           title: 'Error',
@@ -45,7 +43,6 @@ export default function MyWidgetsPage() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
-      console.log('Query result:', { data, error, userId: user.id })
 
       if (error) {
         console.error('Error fetching widgets:', error.message)
@@ -61,7 +58,6 @@ export default function MyWidgetsPage() {
           profiles: { username: user.user_metadata?.username || 'You' }
         }))
         setWidgets(widgetsWithProfile)
-        console.log('Widgets set:', widgetsWithProfile.length, 'widgets found')
       }
     } catch (error: any) {
       console.error('Error fetching widgets:', error?.message || 'Unknown error')

@@ -258,7 +258,3 @@ Please use the GitHub issue tracker to report bugs or request features: [github.
 ![License](https://img.shields.io/github/license/dvillegastech/flutterbox)
 ![Contributors](https://img.shields.io/github/contributors/dvillegastech/flutterbox)
 ![Stars](https://img.shields.io/github/stars/dvillegastech/flutterbox)
-
----
-
-Built with passion for the Flutter community
